@@ -1,168 +1,185 @@
-with Ada.Text_IO; use Ada.Text_IO;
+WITH gstack;
+WITH ada.text_io; USE ada.text_io;
+PACKAGE BODY binarysearchtree IS
+    count : integer := 0;
+    root : binarysearchtreepoint;
 
-package body BinarySearchTree is 
-count : integer := 0; -- how many nodes in the tree?
-stack_count : integer := 0;
-sorted_count : integer := 1;
-pre_order_stack : array (1 .. 100) of BinarySearchTreePoint;
-pre_order_sorted : array (1 .. 100) of BinarySearchTreePoint;
+    PROCEDURE init IS
+    BEGIN
+        root := NULL;
+    END;
 
-   --insert iteratived
-   procedure InsertBinarySearchTree(Root : in out BinarySearchTreePoint;
-				    custName : in String10;
-				    CustPhone : in String10) is
-      p : binarySearchTreePoint := root;
-      q : binarySearchTreePoint := root;
-      t : binarySearchTreePoint;
+    PROCEDURE insertbinarysearchtree (
+            custname  : IN     string10;
+            custphone : IN     string10) IS
+        p : binarysearchtreepoint;
+        q : binarysearchtreepoint;
+    BEGIN
+        count:=count+1;
+        IF root = NULL THEN
+            allocatenode(q, custname, custphone);
+            root := q;
+        ELSE
+            p := root;
+            LOOP
+                IF custname < p.info.name THEN
+                    IF p.llink /= NULL THEN
+                        p := p.llink;
+                    ELSE
+                        allocatenode(q, custname, custphone);
+                        insertnode(p, q, custname, custphone);
+                        EXIT;                    END IF;
+                ELSIF custname > p.info.name THEN
+                    IF p.rlink /= NULL THEN
+                        p := p.rlink;
+                    ELSE
+                        allocatenode(q, custname, custphone);
+                        insertnode(p, q, custname, custphone);
+                        EXIT;
+                    END IF;
+                ELSE
+                    EXIT;
+                END IF;
+            END LOOP;
+        END IF;
+    END insertbinarysearchtree;
 
-   BEGIN
-      count := count+1;
-      t := NEW node;
-      t.info.name:=custName;
-      t.info.phoneNumber:=custPhone;
-      t.rLink:=t;
-      t.lLink:=t;
+    PROCEDURE allocatenode(q : OUT binarysearchtreepoint; namekey: IN string10; numkey : IN string10) IS
+    BEGIN
+        q := NEW node;
+        q.info.name := namekey;
+        q.info.phonenumber := numkey;
+        q.llink := NULL;
+        q.rlink := NULL;
+        q.rtag := false;
+        q.ltag := false;
+    END;
 
-      IF root = NULL THEN
-         root:=t;
-      ELSE
-         LOOP
-            IF q/=NULL THEN
-               IF custName < q.info.name THEN
-                  IF q.lLink=p THEN
-                     p:=q;
-                     EXIT;
-                  END IF;
-                  p:=q;
-                  q:=q.lLink;
-               ELSIF q.rTag = true THEN
-                  p:=q;
-                  q:=q.rLink;
-               ELSE
-                  p:=q;
-                  EXIT;
-               END IF;
+    PROCEDURE insertnode(p : IN OUT binarysearchtreepoint; q : IN OUT binarysearchtreepoint; namekey : IN string10; numkey : IN string10) IS
+    BEGIN
+        IF namekey < p.info.name THEN
+            p.llink := q;
+        ELSE
+            p.rlink := q;
+        END IF;
+    END;
+
+    PROCEDURE findcustomeriterative (
+            custname  : IN     string10;
+            customerpoint :    OUT binarysearchtreepoint) IS
+        p    : binarysearchtreepoint := root;
+        temp : integer               := count;
+    BEGIN
+        LOOP
+            IF temp = 0 THEN
+                p:=root;
+                EXIT;
+            END IF;
+
+            IF p /= NULL THEN
+                IF p.info.name = custname THEN
+                    customerpoint := p;
+                    EXIT;
+                ELSIF p.info.name <= custname THEN
+                    p := p.rlink;
+                ELSE
+                    p := p.llink;
+                END IF;
             ELSE
-               EXIT;
+                EXIT;
             END IF;
-         END LOOP;
+            temp:=temp-1;
+        END LOOP;
+        customerpoint:=p;
+    END findcustomeriterative;
 
-         IF p.info.name > custName THEN
-            t.lLink:=p.lLink;
-            p.lTag := true;
-            t.rLink:=p;
-            t.rTag:=false;
-            IF t.lTag=true THEN
-               t.lLink.rLink:=t ; --check for child and rethread tree
+    PROCEDURE findcustomerrecursive(custname : IN string10; custpoint : OUT binarysearchtreepoint) IS
+    BEGIN
+        findcustomerrecursive(root, custname, custpoint); --overload for first run.
+    END;
+
+    PROCEDURE findcustomerrecursive (startnode : IN binarysearchtreepoint;
+            customername  : IN     string10;
+            customerpoint :    OUT binarysearchtreepoint) IS
+        p : binarysearchtreepoint;
+    BEGIN
+        IF startnode /= NULL THEN
+            p := startnode;
+            IF p.info.name = customername THEN
+                customerpoint := p;
+
+            ELSIF p.info.name <= customername THEN
+                findcustomerrecursive(p.rlink, customername,customerpoint);
+
+            ELSE
+                findcustomerrecursive(p.llink, customername,customerpoint);
+
             END IF;
-         ELSIF p.info.name <= custName THEN
-            p.rLink:=t;
-            p.rTag:=true;
-            t.lLink:=p;
-            t.lTag:=false;
-            IF t.rTag=true THEN
-               t.rLink.lLink:=t; --check for child and rethread tree
+        ELSE
+            customerpoint := p;
+        END IF;
+
+    END findcustomerrecursive;
+
+    FUNCTION inordersuccessor (
+            treepoint : IN     binarysearchtreepoint)
+            RETURN binarysearchtreepoint IS
+        p : binarysearchtreepoint;
+        q : binarysearchtreepoint;
+    BEGIN
+        p:=treepoint;
+        q := p.rlink;
+        IF p.rtag = false THEN
+            p:=q;
+        ELSE
+            WHILE q.ltag = true LOOP
+                q := q.llink;
+            END LOOP;
+            p:=q;
+        END IF;
+
+        RETURN p;
+    END inordersuccessor;
+
+    FUNCTION customername (
+            treepoint : IN     binarysearchtreepoint)
+            RETURN string10 IS
+    BEGIN
+        IF treepoint /= NULL THEN
+            RETURN treepoint.info.name;
+        ELSE
+            RETURN "null      ";
+        END IF;
+    END customername;
+
+    FUNCTION customerphone (
+            treepoint : IN     binarysearchtreepoint)
+            RETURN string10 IS
+    BEGIN
+        RETURN treepoint.info.phonenumber;
+    END customerphone;
+
+    PROCEDURE inordertraversal(startnode : IN binarysearchtreepoint) IS
+        PACKAGE node_stack IS NEW gstack(count, binarysearchtreepoint);
+        USE node_stack;
+        p : binarysearchtreepoint;
+        x : binarysearchtreepoint;
+    BEGIN
+        p := startnode;
+        LOOP
+            IF p /= NULL THEN
+                push(p);
+                p := p.llink;
+            ELSE
+                IF empty = 1 THEN
+                    EXIT;
+                ELSE
+                    pop(x);
+                    put_line(string(x.info.name) & string(x.info.phonenumber));
+                    p := x.rlink;
+                END IF;
             END IF;
-         END IF;
-      END IF;
-   end InsertBinarySearchTree;
+        END LOOP;
+    END;
 
-   PROCEDURE init( Root : IN OUT BinarySearchTreePoint) IS
-   BEGIN
-    Root := Null;
-   END;
-   
-   procedure FindCustomerIterative(Root : in BinarySearchTreePoint;
-				   CustomerName : in String10;
-				   CustomerPoint : out BinarySearchTreePoint) is
-      p    : binarySearchTreePoint := root;
-      temp : integer               := count;
-   BEGIN
-      LOOP
-         IF temp = 0 THEN
-            p:=root;
-            EXIT;
-         ELSIF p.info.name = customerName THEN
-            customerPoint:= p;
-            EXIT;
-         ELSIF p.info.name > customerName THEN
-            p:=p.lLink;
-         ELSIF p.info.name <= customerName THEN
-            p:=p.rLink;
-         END IF;
-
-         temp:=temp-1;
-      END LOOP;
-      customerPoint:=root;
-   end FindCustomerIterative;
-   
-   procedure PreOrder(Root : in BinarySearchTreePoint) is
-      Pt : BinarySearchTreePoint := Root;
-   begin
-      loop
-        if Pt /= null then
-          pre_order_sorted(sorted_count) := Pt;
-          stack_count := stack_count + 1;
-          pre_order_stack(stack_count) := Pt;
-          Pt := Pt.Llink;
-        else
-          if pre_order_stack(1) = null then
-            exit;
-          else
-            pt := pre_order_stack(stack_count);
-            stack_count := stack_count - 1;
-            pt := pt.rlink;
-          end if;
-        end if;
-      end loop;
-   end;
-  
-  -- needs fixing
-  procedure FindCustomerRecursive(Root : in BinarySearchTreePoint;
-                                  CustomerName : in String10;
-                                  CustomerPoint : out BinarySearchTreePoint) is
-  
-   begin
-    if CustomerName = Root.Info.Name then
-      put("hello");
-      CustomerPoint := Root;
-    else
-      put("no");
-      CustomerPoint := Root;
-    end if;
-   end FindCustomerRecursive;
-   
-   --assume TreePoint points to a node of a threaded binary tree.
-   --iterative function
-   function InOrderSuccessor(TreePoint : in BinarySearchTreePoint)
-			    return String10 is
-      p : binarySearchTreePoint;
-      q : binarySearchTreePoint;
-   BEGIN
-      p:=treePoint;
-      q := p.rLink;
-      IF p.rTag = false THEN
-         p:=q;
-      ELSE
-         WHILE q.lTag = true LOOP
-            q := q.lLink;
-         END LOOP;
-         p:=q;
-      END IF;
-
-      RETURN p;
-   end InOrderSuccessor;
-   
-   function CustomerName(TreePoint : in BinarySearchTreePoint) return String10 is
-   begin
-      return TreePoint.info.name;
-   end CustomerName;
-   
-   function CustomerPhone(TreePoint : in BinarySearchTreePoint) return String10 is
-   begin
-      return TreePoint.info.PhoneNumber;
-   end CustomerPhone;
-   
-begin
-   null;
-end;
+END binarysearchtree;

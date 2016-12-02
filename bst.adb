@@ -1,97 +1,119 @@
-WITH Ada.Text_IO,Ada.Text_IO.Unbounded_IO, Ada.Strings.Unbounded,BinarySearchTree;
-USE Ada.TEXT_IO,Ada.Text_IO.Unbounded_IO,Ada.Strings.Unbounded,BinarySearchTree;
+WITH ada.text_io, ada.text_io.unbounded_io, ada.strings.unbounded,binarysearchtree;
+USE ada.text_io, ada.text_io.unbounded_io, ada.strings.unbounded,binarysearchtree;
 
-PROCEDURE BST IS
-   PACKAGE IIO IS NEW Ada.Text_IO.Integer_IO(Integer);
-   USE IIO;
+PROCEDURE bst IS
+    PACKAGE integer_in_out IS NEW ada.text_io.integer_io(integer);
+    USE integer_in_out;
 
-   Main      : binarySearchTreePoint;      -- Root
-   tempPoint : BinarySearchTreePoint;      -- Temp Pointer
-   selection : integer               := 0;
+    userin : integer;
+    main : binarysearchtreepoint;
 
-   PROCEDURE get10 (
-         S : IN OUT String10) IS
-      BUF : Unbounded_String;
-   BEGIN
-      BUF := GET_LINE;
+    PROCEDURE get10 (
+            s : IN OUT string10) IS
+        buf : unbounded_string;
+    BEGIN
+        buf := get_line;
 
-      FOR I IN String10'RANGE LOOP
-         IF I <= LENGTH(BUF) THEN
-            S(I) := ELEMENT(BUF,I);
-         ELSE
-            S(I) := ' ';
-         END IF;
-      END LOOP;
-   END get10;
-
-   Name  : String10 := (OTHERS => ' ');
-   Phone : String10 := (OTHERS => ' ');
-BEGIN
-   init(Main);
-   init(tempPoint);
-   Put_Line("Select a operation:");
-   Put_Line("1. Insert Into BST");
-   Put_Line("2. Find Customer Recursively");
-   Put_Line("3. Find Customer Iteratively");
-   Put_Line("4. Find InOrderSucessor");
-   Put_Line("5. Exit");
-   LOOP
-   	  Put_line(" ");
-      Put("Enter a Command : (9 to relist options)");
-      get(selection);
-      SKIP_LINE;
-      CASE selection IS
-         WHEN 1 =>
-            Put("Enter a Name: ");
-            get10(name);
-            Put("Enter a Phone Number: ");
-            get10(phone);
-            InsertBinarySearchTree(main,name,phone);
-            Put("Name : ");
-            put(String(name));
-            Put(" , Phone : ");
-            put(String(phone));
-            Put(" , Inserted to BST");
-            NEW_LINE;
-
-         WHEN 2 =>
-            Put_Line("Finding Customer Recursively..");
-            Put("Enter a name to find: ");
-            get10(name);
-            FindCustomerRecursive(Main,name,temppoint);
-         WHEN 3 =>
-            Put_Line("Finding Customer Iteratively");
-            Put("Enter a name to find: ");
-            get10(name);
-            FindCustomerIterative(Main,name,temppoint);
-            IF CustomerName(tempPoint) = name THEN
-               name := customerName(temppoint);
-               Phone := customerPhone(temppoint);
-               put_line("Customer Found");
-               Put(String(Name));
-               Put(" : ");
-               Put(String(Phone));
+        FOR i IN string10'RANGE LOOP
+            IF i <= length(buf) THEN
+                s(i) := element(buf,i);
             ELSE
-               Put_Line("Record not Found");
+                s(i) := ' ';
             END IF;
+        END LOOP;
+    END get10;
 
-         WHEN 4 =>
-            Put_Line("Finding In order successor...");
-                  --Put(InOrderSuccessor(temppoint));
-        
-         WHEN 5 =>
-            EXIT;
-		WHEN 9 =>
-			   Put_Line("Select a operation:");
-  				 Put_Line("1. Insert Into BST");
-   				Put_Line("2. Find Customer Recursively");
-   				Put_Line("3. Find Customer Iteratively");
-   				Put_Line("4. Find InOrderSucessor");
-   				Put_Line("5. Exit");
+    name  : string10 := (OTHERS => ' ');
+    phone : string10 := (OTHERS => ' ');
+BEGIN
+    init;
+    put_line("OPCODES: ");
+    put_line("1. Insert");
+    put_line("2. Find Recursive");
+    put_line("3. FindIterative");
+    put_line("4. Find In Order Sucessor");
+    put_line("5. Traverse Tree Inorder");
+    put_line("6. Exit");
+    LOOP
 
-         WHEN OTHERS =>
-            Put_Line("Incorrect Choice, Please Try Again");
+        put_line(" ");
+        get(userin);
+        skip_line;
+        CASE userin IS
+            WHEN 1 =>
+                get10(name);
+                get10(phone);
+                insertbinarysearchtree(name, phone);
+                put(string(name));
+                put(" , ");
+                put(string(phone));
+                put(" has been inserted");
+                new_line;
 
-      END CASE;
-   END LOOP;
-END BST;
+            WHEN 2 =>
+                put_line("Recursive Search :");
+                put("Searching for ");
+                get10(name);
+                put_line(string(name));
+                findcustomerrecursive(name, main);
+                IF customername(main) = name THEN
+                    name := customername(main);
+                    phone := customerphone(main);
+                    put_line(" ");
+                    put_line("Found");
+                    put(string(name));
+                    put(" : ");
+                    put_line(string(phone));
+                    put_line(" ");
+                ELSE
+                    put_line("Customer is not in our Tree");
+                END IF;
+            WHEN 3 =>
+                put_line("Iterative Search : ");
+                put("Searching for ");
+                get10(name);
+                put_line(string(name));
+                findcustomeriterative(name,main);
+                IF customername(main) = name THEN
+                    name := customername(main);
+                    phone := customerphone(main);
+                    put_line(" ");
+                    put_line("Found");
+                    put(string(name));
+                    put(" : ");
+                    put(string(phone));
+                    put_line(" ");
+                ELSE
+                    put_line("Customer is not in our Tree");
+                END IF;
+
+            WHEN 4 =>
+                put_line("In Order Successor : ");
+                put(string(customername(inordersuccessor(main))));
+            WHEN 5 =>
+                put_line("Traverse Tree Inorder : ");
+                put_line("Starting Point: ");
+                get10(name);
+                findcustomerrecursive(name, main);
+                IF customername(main) = name THEN
+                    inordertraversal(main);
+                ELSE
+                    put_line("Starting point must be valid.");
+                END IF;
+            WHEN 6 =>
+                EXIT;
+            WHEN 9 =>
+                put_line("Select a operation:");
+                put_line("1. Insert");
+                put_line("2. Find Recursive");
+                put_line("3. FindIterative");
+                put_line("4. Find In Order Sucessor");
+                put_line("5. Traverse Tree Inorder");
+                put_line("6. Exit");
+
+            WHEN OTHERS =>
+                put_line("Invalid option.");
+
+        END CASE;
+    END LOOP;
+END bst;
